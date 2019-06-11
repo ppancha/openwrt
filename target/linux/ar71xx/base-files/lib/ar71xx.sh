@@ -16,7 +16,7 @@ ar71xx_get_mtd_offset_size_format() {
 	dev=$(find_mtd_part $mtd)
 	[ -z "$dev" ] && return
 
-	dd if=$dev bs=1 skip=$offset count=$size 2>/dev/null | hexdump -v -e "1/1 \"$format\""
+	dd if=$dev iflag=skip_bytes bs=$size skip=$offset count=1 2>/dev/null | hexdump -v -e "1/1 \"$format\""
 }
 
 ar71xx_get_mtd_part_magic() {
@@ -98,21 +98,27 @@ ubnt_xm_board_detect() {
 	[ -z "$model" ] || AR71XX_MODEL="${model}${magic:3:1}"
 }
 
-ubnt_ac_lite_get_mtd_part_magic() {
+ubnt_unifi_ac_get_mtd_part_magic() {
 	ar71xx_get_mtd_offset_size_format EEPROM 12 2 %02x
 }
 
-ubnt_ac_lite_board_detect() {
+ubnt_unifi_ac_board_detect() {
 	local model
 	local magic
 
-	magic="$(ubnt_ac_lite_get_mtd_part_magic)"
+	magic="$(ubnt_unifi_ac_get_mtd_part_magic)"
 	case ${magic:0:4} in
 	"e517")
 		model="Ubiquiti UniFi-AC-LITE"
 		;;
+	"e537")
+		model="Ubiquiti UniFi-AC-PRO"
+		;;
 	"e557")
 		model="Ubiquiti UniFi-AC-MESH"
+		;;
+	"e567")
+		model="Ubiquiti UniFi-AC-MESH-PRO"
 		;;
 	esac
 
@@ -384,7 +390,7 @@ tplink_pharos_v2_get_model_string() {
 	part=$(find_mtd_part 'product-info')
 	[ -z "$part" ] && return 1
 
-	dd if=$part bs=1 skip=4360 count=64 2>/dev/null | tr -d '\r\0' | head -n 1
+	dd if=$part iflag=skip_bytes bs=64 skip=4360 count=1 2>/dev/null | tr -d '\r\0' | head -n 1
 }
 
 ar71xx_board_detect() {
@@ -524,6 +530,9 @@ ar71xx_board_detect() {
 		name="bullet-m"
 		ubnt_xm_board_detect
 		;;
+	*"Bullet M XW")
+		name="bullet-m-xw"
+		;;
 	*"BXU2000n-2 rev. A1")
 		name="bxu2000n-2-a1"
 		;;
@@ -578,6 +587,10 @@ ar71xx_board_detect() {
 		;;
 	*"CPE210 v2")
 		name="cpe210-v2"
+		tplink_pharos_board_detect "$(tplink_pharos_v2_get_model_string)"
+		;;
+	*"CPE210 v3")
+		name="cpe210-v3"
 		tplink_pharos_board_detect "$(tplink_pharos_v2_get_model_string)"
 		;;
 	*"CPE505N")
@@ -829,6 +842,9 @@ ar71xx_board_detect() {
 	*"MiniBox V1.0")
 		name="minibox-v1"
 		;;
+	*"Minibox V3.2")
+		name="minibox-v3.2"
+		;;
 	*"MR12")
 		name="mr12"
 		;;
@@ -1008,6 +1024,9 @@ ar71xx_board_detect() {
 	*"RouterBOARD 2011UiAS-2HnD")
 		name="rb-2011uias-2hnd"
 		;;
+	*"RouterBOARD 2011UiAS-2HnD r2")
+		name="rb-2011uias-2hnd-r2"
+		;;
 	*"RouterBOARD 411/A/AH")
 		name="rb-411"
 		;;
@@ -1080,10 +1099,13 @@ ar71xx_board_detect() {
 	*"RouterBOARD 921GS-5HPacD r2")
 		name="rb-921gs-5hpacd-r2"
 		;;
+	*"RouterBOARD 922UAGS-5HPacD")
+		name="rb-922uags-5hpacd"
+		;;
 	*"RouterBOARD 931-2nD")
 		name="rb-931-2nd"
 		;;
-	*"RouterBOARD 941-2nD")
+	*"RouterBOARD"*"941-2nD")
 		name="rb-941-2nd"
 		;;
 	*"RouterBOARD 951G-2HnD")
@@ -1109,6 +1131,9 @@ ar71xx_board_detect() {
 		;;
 	*"RouterBOARD mAP L-2nD")
 		name="rb-mapl-2nd"
+		;;
+	*"RouterBOARD SXT 2nD r3")
+		name="rb-sxt-2nd-r3"
 		;;
 	*"RouterBOARD SXT Lite2")
 		name="rb-sxt2n"
@@ -1388,10 +1413,11 @@ ar71xx_board_detect() {
 		;;
 	*"UniFi-AC-LITE/MESH")
 		name="unifiac-lite"
-		ubnt_ac_lite_board_detect
+		ubnt_unifi_ac_board_detect
 		;;
-	*"UniFi-AC-PRO")
+	*"UniFi-AC-PRO/MESH-PRO")
 		name="unifiac-pro"
+		ubnt_unifi_ac_board_detect
 		;;
 	*"UniFiAP Outdoor")
 		name="unifi-outdoor"

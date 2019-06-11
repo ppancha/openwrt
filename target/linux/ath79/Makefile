@@ -6,9 +6,10 @@ BOARDNAME:=Atheros ATH79 (DTS)
 CPU_TYPE:=24kc
 SUBTARGETS:=generic nand tiny
 
-FEATURES:=ramdisk source-only
+FEATURES:=ramdisk
 
 KERNEL_PATCHVER:=4.14
+KERNEL_TESTING_PATCHVER := 4.19
 
 include $(INCLUDE_DIR)/target.mk
 
